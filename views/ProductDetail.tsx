@@ -9,10 +9,15 @@ import {
   Share2, 
   Printer, 
   Download,
-  AlertTriangle
+  AlertTriangle,
+  Anchor,
+  Fish,
+  Factory,
+  CheckCircle2,
+  Sprout,
+  Milk
 } from 'lucide-react';
 import { useAppContext } from '../App';
-import { ShipmentStatus } from '../types';
 
 export default function ProductDetail({ productId }: { productId: string }) {
     const { products, setView } = useAppContext();
@@ -30,16 +35,24 @@ export default function ProductDetail({ productId }: { productId: string }) {
             </button>
 
             {/* Header */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 relative overflow-hidden">
+                {product.isFTL && (
+                    <div className="absolute top-0 right-0 bg-red-100 text-red-700 px-4 py-1 text-xs font-bold rounded-bl-xl border-b border-l border-red-200 uppercase tracking-wide">
+                        FTL Item: {product.ftlCategory}
+                    </div>
+                )}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-2">
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center text-2xl">
-                            {product.category === 'Fresh Produce' ? '🥭' : product.category === 'Seafood' ? '🦐' : '📦'}
+                        <div className="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center text-2xl border border-slate-200">
+                            {product.category === 'Fresh Produce' ? '🥭' : 
+                             product.category === 'Seafood' ? '🐟' : 
+                             product.category === 'Cheeses' ? '🧀' : 
+                             product.category === 'Ready-to-Eat Deli Salads' ? '🥗' : '📦'}
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-slate-900">{product.name}</h1>
                             <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
-                                <span className="font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-700">{product.tlc}</span>
+                                <span className="font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-medium border border-slate-200">{product.tlc}</span>
                                 <span>•</span>
                                 <span>{product.supplierName}</span>
                             </div>
@@ -47,10 +60,10 @@ export default function ProductDetail({ productId }: { productId: string }) {
                     </div>
                     <div className="flex gap-2">
                         <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700 font-medium">
-                            <Printer size={18} /> Print
+                            <Printer size={18} /> Print Map
                         </button>
                         <button className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium shadow-sm">
-                            <Share2 size={18} /> Share with FDA
+                            <Share2 size={18} /> Share 24h Pkg
                         </button>
                     </div>
                 </div>
@@ -60,58 +73,108 @@ export default function ProductDetail({ productId }: { productId: string }) {
                 {/* Timeline - Left 2/3 */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                        <h2 className="text-lg font-bold text-slate-900 mb-6">Traceability Chain</h2>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-lg font-bold text-slate-900">Critical Tracking Events (CTEs)</h2>
+                            <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">FSMA 204 Compliant</span>
+                        </div>
                         
-                        <div className="relative pl-8 space-y-12 before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                        <div className="relative pl-8 space-y-10 before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
                             {product.events.map((event, index) => {
-                                const Icon = 
-                                    event.type === 'Harvesting' ? MapPin :
-                                    event.type === 'Packing' ? Package :
-                                    event.type === 'Shipping' ? Truck :
-                                    event.type === 'Receiving' ? MapPin : AlertTriangle;
+                                let Icon = MapPin;
+                                let colorClass = 'bg-blue-500';
+                                
+                                switch(event.type) {
+                                    case 'Harvesting': Icon = Anchor; colorClass = 'bg-amber-500'; break;
+                                    case 'Cooling': Icon = Thermometer; colorClass = 'bg-cyan-500'; break;
+                                    case 'Initial Packing': Icon = Package; colorClass = 'bg-purple-600'; break;
+                                    case 'First Land-Based Receiver': Icon = Fish; colorClass = 'bg-indigo-600'; break;
+                                    case 'Transformation': Icon = Factory; colorClass = 'bg-pink-600'; break;
+                                    case 'Shipping': Icon = Truck; colorClass = 'bg-slate-500'; break;
+                                    case 'Receiving': Icon = CheckCircle2; colorClass = 'bg-emerald-600'; break;
+                                }
+
+                                const isTlcCreator = event.kdeData?.tlcAssigned;
 
                                 return (
                                     <div key={event.id} className="relative">
                                         {/* Node Icon */}
-                                        <div className={`absolute -left-[41px] w-8 h-8 rounded-full border-4 border-white flex items-center justify-center
-                                            ${event.status === 'Complete' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}
-                                        `}>
+                                        <div className={`absolute -left-[41px] w-8 h-8 rounded-full border-4 border-white flex items-center justify-center text-white shadow-sm z-10 ${colorClass}`}>
                                             <Icon size={14} />
                                         </div>
 
-                                        <div className="bg-slate-50 rounded-lg p-5 border border-slate-100 relative group hover:border-emerald-200 transition-colors">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div>
-                                                    <h3 className="font-bold text-slate-900">{event.type}</h3>
-                                                    <p className="text-sm text-slate-500">{event.location}</p>
-                                                </div>
-                                                <span className="text-xs font-mono text-slate-400">{event.date}</span>
-                                            </div>
-                                            
-                                            <div className="grid grid-cols-2 gap-4 mt-4 text-sm">
-                                                <div>
-                                                    <span className="text-slate-500 block text-xs">Performed By</span>
-                                                    <span className="font-medium text-slate-800">{event.performer}</span>
-                                                </div>
-                                                {event.documents.length > 0 && (
-                                                    <div>
-                                                        <span className="text-slate-500 block text-xs">Documents</span>
-                                                        <div className="flex gap-2 mt-1">
-                                                            {event.documents.map(doc => (
-                                                                <span key={doc.id} className="inline-flex items-center text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-xs border border-emerald-100 cursor-pointer hover:bg-emerald-100">
-                                                                    <FileText size={12} className="mr-1" /> {doc.name}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {event.type === 'Cooling' && (
-                                                <div className="mt-3 flex items-center text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded w-fit">
-                                                    <Thermometer size={14} className="mr-1" /> Temp Check: 4°C (Pass)
+                                        <div className={`bg-white rounded-lg p-5 border relative group transition-all hover:shadow-md
+                                            ${isTlcCreator ? 'border-purple-200 bg-purple-50/30' : 'border-slate-200'}
+                                        `}>
+                                            {isTlcCreator && (
+                                                <div className="absolute -top-3 right-4 bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
+                                                    TLC ASSIGNED
                                                 </div>
                                             )}
+
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <h3 className={`font-bold ${isTlcCreator ? 'text-purple-900' : 'text-slate-900'}`}>{event.type}</h3>
+                                                    <p className="text-sm text-slate-500">{event.location}</p>
+                                                </div>
+                                                <span className="text-xs font-mono text-slate-400 border border-slate-100 px-2 py-1 rounded">{event.date}</span>
+                                            </div>
+                                            
+                                            <div className="text-sm text-slate-600 mb-4 italic">
+                                                {event.details}
+                                            </div>
+
+                                            {/* Key Data Elements (KDEs) Display */}
+                                            {event.kdeData && (
+                                                <div className="bg-white rounded border border-slate-200 overflow-hidden">
+                                                    <div className="bg-slate-50 px-3 py-1.5 border-b border-slate-200">
+                                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Key Data Elements (KDEs)</span>
+                                                    </div>
+                                                    <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6">
+                                                        {Object.entries(event.kdeData).map(([key, value]) => {
+                                                            if (key === 'Note') return null; // Skip internal notes
+                                                            if (Array.isArray(value)) {
+                                                                return (
+                                                                    <div key={key} className="col-span-2">
+                                                                         <span className="block text-[10px] text-slate-400 uppercase">{key}</span>
+                                                                         <div className="space-y-1 mt-1">
+                                                                            {value.map((v, i) => (
+                                                                                <div key={i} className="text-xs bg-slate-100 p-1 rounded border border-slate-200">{v}</div>
+                                                                            ))}
+                                                                         </div>
+                                                                    </div>
+                                                                )
+                                                            }
+                                                            return (
+                                                                <div key={key} className={`${key.includes('Ingredient') ? 'col-span-2' : ''}`}>
+                                                                    <span className="block text-[10px] text-slate-400 uppercase">{key}</span>
+                                                                    <span className={`block text-sm font-medium ${key === 'tlcAssigned' ? 'text-purple-700 font-mono' : 'text-slate-800'}`}>
+                                                                        {value}
+                                                                    </span>
+                                                                </div>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                    {event.kdeData.Note && (
+                                                        <div className="bg-yellow-50 px-3 py-2 text-xs text-yellow-800 border-t border-yellow-100 flex items-start gap-2">
+                                                            <AlertTriangle size={12} className="mt-0.5" />
+                                                            {event.kdeData.Note}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                            
+                                            <div className="mt-4 flex items-center justify-between text-sm">
+                                                <div className="text-slate-500">
+                                                    Performed by <span className="font-medium text-slate-800">{event.performer}</span>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    {event.documents.map(doc => (
+                                                        <button key={doc.id} className="flex items-center text-xs text-blue-600 hover:underline">
+                                                            <FileText size={12} className="mr-1" /> {doc.name}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 );
@@ -121,11 +184,17 @@ export default function ProductDetail({ productId }: { productId: string }) {
                     
                     {/* Simulated Map Visual */}
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-80 relative bg-slate-100 flex items-center justify-center">
-                        <div className="absolute inset-0 opacity-20 bg-[url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg')] bg-cover bg-center"></div>
-                        <div className="relative z-10 text-center">
-                            <GlobeViz />
-                            <p className="mt-4 text-sm font-medium text-slate-500">Supply Chain Geolocation Visualization</p>
-                        </div>
+                         <div className="absolute inset-0 opacity-20 bg-[url('https://upload.wikimedia.org/wikipedia/commons/e/ec/World_map_blank_without_borders.svg')] bg-cover bg-center"></div>
+                         <div className="relative z-10 text-center">
+                            <div className="bg-white/80 backdrop-blur px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
+                                <p className="text-xs font-bold text-slate-500 uppercase mb-1">Origin Coordinates</p>
+                                <p className="font-mono text-emerald-700">
+                                    {product.events[0]?.coordinates 
+                                        ? `${product.events[0].coordinates.lat.toFixed(4)}° N, ${product.events[0].coordinates.lng.toFixed(4)}° E`
+                                        : 'N/A'}
+                                </p>
+                            </div>
+                         </div>
                     </div>
                 </div>
 
@@ -133,7 +202,7 @@ export default function ProductDetail({ productId }: { productId: string }) {
                 <div className="space-y-6">
                     {/* Status Card */}
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Compliance Status</h3>
+                        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Data Completeness</h3>
                         <div className="flex items-center justify-center mb-6 relative">
                             <div className="w-32 h-32 rounded-full border-8 border-slate-100 flex items-center justify-center relative">
                                 <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
@@ -150,43 +219,67 @@ export default function ProductDetail({ productId }: { productId: string }) {
                         </div>
                         <div className="space-y-3">
                             <div className="flex justify-between text-sm">
-                                <span className="text-slate-500">KDEs Captured</span>
-                                <span className="font-medium">18/20</span>
+                                <span className="text-slate-500">Traceability Lot Code</span>
+                                <span className="font-mono font-medium text-xs bg-slate-100 px-1 rounded">{product.tlc}</span>
                             </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-slate-500">Critical Events</span>
-                                <span className="font-medium">{product.events.length}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-slate-500">FTL Status</span>
-                                <span className="font-medium text-emerald-600 bg-emerald-50 px-2 rounded">Active</span>
+                             <div className="flex justify-between text-sm">
+                                <span className="text-slate-500">TLC Source</span>
+                                <span className="font-medium text-right truncate w-32">{product.events.find(e => e.kdeData?.tlcAssigned)?.performer || 'Unknown'}</span>
                             </div>
                         </div>
+                         <button className="w-full mt-6 py-2 border border-emerald-200 text-emerald-700 bg-emerald-50 rounded-lg text-sm font-medium hover:bg-emerald-100">
+                            Verify TLC Source
+                        </button>
                     </div>
 
                     {/* Document Library Mini */}
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                         <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">All Documents</h3>
+                         <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Required Records</h3>
                          <div className="space-y-2">
-                            <div className="flex items-center justify-between p-2 hover:bg-slate-50 rounded cursor-pointer border border-transparent hover:border-slate-200 transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-red-100 p-2 rounded text-red-600"><FileText size={16}/></div>
-                                    <div className="text-sm">
-                                        <p className="font-medium text-slate-800">Bill of Lading</p>
-                                        <p className="text-xs text-slate-500">PDF • 2.4 MB</p>
+                            {product.category === 'Cheeses' ? (
+                                <>
+                                    <div className="flex items-center justify-between p-2 rounded border border-slate-100">
+                                        <div className="flex items-center gap-3">
+                                            <Milk size={16} className="text-slate-400"/>
+                                            <span className="text-sm text-slate-700">Pasteurization Log</span>
+                                        </div>
+                                        <CheckCircle2 size={16} className="text-emerald-500" />
                                     </div>
-                                </div>
-                                <Download size={16} className="text-slate-400" />
-                            </div>
-                            <div className="flex items-center justify-between p-2 hover:bg-slate-50 rounded cursor-pointer border border-transparent hover:border-slate-200 transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <div className="bg-blue-100 p-2 rounded text-blue-600"><FileText size={16}/></div>
-                                    <div className="text-sm">
-                                        <p className="font-medium text-slate-800">Commercial Invoice</p>
-                                        <p className="text-xs text-slate-500">PDF • 1.1 MB</p>
+                                </>
+                            ) : product.ftlCategory === 'Sprouts' ? (
+                                <>
+                                    <div className="flex items-center justify-between p-2 rounded border border-slate-100">
+                                        <div className="flex items-center gap-3">
+                                            <Sprout size={16} className="text-slate-400"/>
+                                            <span className="text-sm text-slate-700">Seed Tag Info</span>
+                                        </div>
+                                        <CheckCircle2 size={16} className="text-emerald-500" />
                                     </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="flex items-center justify-between p-2 rounded border border-slate-100">
+                                        <div className="flex items-center gap-3">
+                                            <FileText size={16} className="text-slate-400"/>
+                                            <span className="text-sm text-slate-700">Harvest Log</span>
+                                        </div>
+                                        <CheckCircle2 size={16} className="text-emerald-500" />
+                                    </div>
+                                    <div className="flex items-center justify-between p-2 rounded border border-slate-100">
+                                        <div className="flex items-center gap-3">
+                                            <FileText size={16} className="text-slate-400"/>
+                                            <span className="text-sm text-slate-700">Cooling Log</span>
+                                        </div>
+                                        <CheckCircle2 size={16} className="text-emerald-500" />
+                                    </div>
+                                </>
+                            )}
+                             <div className="flex items-center justify-between p-2 rounded border border-slate-100">
+                                <div className="flex items-center gap-3">
+                                    <FileText size={16} className="text-slate-400"/>
+                                    <span className="text-sm text-slate-700">Bill of Lading</span>
                                 </div>
-                                <Download size={16} className="text-slate-400" />
+                                <CheckCircle2 size={16} className="text-emerald-500" />
                             </div>
                          </div>
                     </div>
@@ -195,19 +288,3 @@ export default function ProductDetail({ productId }: { productId: string }) {
         </div>
     );
 }
-
-// Simple SVG visualizer for the map placeholder
-const GlobeViz = () => (
-    <svg width="200" height="100" viewBox="0 0 200 100" className="mx-auto drop-shadow-lg">
-        {/* Route Line */}
-        <path d="M 20 50 Q 100 10 180 50" fill="none" stroke="#10b981" strokeWidth="3" strokeDasharray="6 4" />
-        {/* Origin */}
-        <circle cx="20" cy="50" r="6" fill="#10b981" />
-        <text x="20" y="70" fontSize="10" textAnchor="middle" fill="#64748b">Thailand</text>
-        {/* Dest */}
-        <circle cx="180" cy="50" r="6" fill="#3b82f6" />
-        <text x="180" y="70" fontSize="10" textAnchor="middle" fill="#64748b">USA</text>
-        {/* Ship */}
-        <circle cx="100" cy="30" r="4" fill="white" stroke="#10b981" strokeWidth="2" />
-    </svg>
-);

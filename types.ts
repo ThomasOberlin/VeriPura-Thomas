@@ -1,3 +1,4 @@
+
 export enum ShipmentStatus {
     PENDING = 'Pending',
     IN_TRANSIT = 'In Transit',
@@ -17,7 +18,9 @@ export enum ProductType {
     PRODUCE = 'Fresh Produce',
     SEAFOOD = 'Seafood',
     PACKAGED = 'Packaged Food',
-    SPICES = 'Herbs & Spices'
+    SPICES = 'Herbs & Spices',
+    DAIRY = 'Cheeses',
+    READY_TO_EAT = 'Ready-to-Eat Deli Salads'
 }
 
 export interface Address {
@@ -44,7 +47,7 @@ export interface Supplier {
 export interface Document {
     id: string;
     name: string;
-    type: 'BOL' | 'Invoice' | 'Certificate' | 'Photo' | 'Lab Report';
+    type: 'BOL' | 'Invoice' | 'Certificate' | 'Photo' | 'Lab Report' | 'Traceability Plan';
     uploadDate: string;
     expiryDate?: string;
     url?: string;
@@ -52,7 +55,8 @@ export interface Document {
 
 export interface TraceabilityEvent {
     id: string;
-    type: 'Harvesting' | 'Packing' | 'Cooling' | 'Shipping' | 'Receiving';
+    // Updated to match FSMA 204 CTEs strictly
+    type: 'Harvesting' | 'Cooling' | 'Initial Packing' | 'First Land-Based Receiver' | 'Transformation' | 'Shipping' | 'Receiving';
     date: string;
     location: string;
     performer: string;
@@ -60,6 +64,15 @@ export interface TraceabilityEvent {
     status: 'Complete' | 'Missing Data';
     details?: string;
     coordinates?: { lat: number; lng: number };
+    // Specific KDEs required by the rule
+    kdeData?: {
+        tlcAssigned?: string; // If TLC is created here
+        tlcSource?: string; // Location of TLC source
+        inputTLCs?: string[]; // For Transformation (ingredients)
+        referenceDocType?: string;
+        referenceDocNum?: string;
+        [key: string]: any;
+    };
 }
 
 export interface Product {
@@ -73,6 +86,7 @@ export interface Product {
     quantity: number;
     uom: string;
     isFTL: boolean; // Food Traceability List
+    ftlCategory?: string; // e.g., "Leafy Greens", "Histamine-producing species"
     completeness: number; // 0-100
     status: ShipmentStatus;
     events: TraceabilityEvent[];
@@ -87,13 +101,68 @@ export interface Alert {
     date: string;
 }
 
+// New Interface for Section 1.1315
+export interface TraceabilityPlan {
+    procedureDescription: string;
+    ftlIdentificationProcedure: string;
+    tlcAssignmentProcedure: string;
+    pointOfContact: {
+        name: string;
+        phone: string;
+        email: string;
+    };
+    farmMaps: {
+        id: string;
+        name: string;
+        location: string;
+        coordinates: { lat: number; lng: number }[];
+    }[];
+}
+
 export interface AppState {
     suppliers: Supplier[];
     products: Product[];
     alerts: Alert[];
+    traceabilityPlan: TraceabilityPlan;
     currentUser: {
         name: string;
         role: 'Admin' | 'Manager' | 'User';
+        company: string;
+    };
+}
+
+// --- DEMO SYSTEM TYPES ---
+
+export type DemoActionType = 'navigate' | 'click' | 'fill' | 'highlight' | 'wait' | 'typing';
+
+export interface DemoAction {
+    type: DemoActionType;
+    target?: string; // Selector or View ID
+    value?: any;
+    delay?: number;
+}
+
+export interface DemoStep {
+    id: number;
+    title: string;
+    narration: string;
+    targetElement?: string; // CSS selector to highlight
+    actions?: DemoAction[]; // Actions to perform BEFORE narration starts or during
+    duration?: number; // Force wait time
+    path?: string; // Ensure we are on this view
+}
+
+export interface DemoScenario {
+    id: string;
+    title: string;
+    role: string;
+    icon: any; // Lucide icon name
+    description: string;
+    durationSeconds: number;
+    steps: DemoStep[];
+    persona: {
+        name: string;
+        avatarInitials: string;
         company: string;
     };
 }

@@ -1,11 +1,13 @@
+
 import React, { useState } from 'react';
-import { Upload, X, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Upload, X, FileText, CheckCircle2, AlertCircle, ChevronDown, MapPin, Thermometer } from 'lucide-react';
 import { useAppContext } from '../App';
 import { ProductType, ShipmentStatus } from '../types';
 
 export default function Receiving() {
     const { suppliers, addProduct, setView } = useAppContext();
     const [step, setStep] = useState(1);
+    const [showUpstreamModal, setShowUpstreamModal] = useState(false);
     const [formData, setFormData] = useState({
         supplierId: '',
         productName: '',
@@ -47,17 +49,16 @@ export default function Receiving() {
             quantity: Number(formData.quantity),
             uom: formData.uom,
             isFTL: true,
-            completeness: 85, // Mock initial score
-            status: ShipmentStatus.PENDING,
+            completeness: 100, // Demo assumes perfect entry
+            status: ShipmentStatus.COMPLIANT,
             events: [],
         });
         
-        // Show success state
         setStep(3);
     };
 
     return (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto relative" id="receiving-view">
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-slate-900">Log New Receipt</h1>
                 <p className="text-slate-500">Enter details for incoming shipment from Asian suppliers.</p>
@@ -77,8 +78,19 @@ export default function Receiving() {
                     <h2 className="text-lg font-semibold mb-6">Basic Information</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Received Date *</label>
+                            <input 
+                                id="input-date"
+                                type="date" 
+                                className="w-full rounded-lg border-slate-300 focus:ring-emerald-500 focus:border-emerald-500"
+                                value={formData.receivedDate}
+                                onChange={e => setFormData({...formData, receivedDate: e.target.value})}
+                            />
+                        </div>
+                        <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">Supplier *</label>
                             <select 
+                                id="input-supplier"
                                 className="w-full rounded-lg border-slate-300 focus:ring-emerald-500 focus:border-emerald-500"
                                 value={formData.supplierId}
                                 onChange={e => setFormData({...formData, supplierId: e.target.value})}
@@ -90,17 +102,9 @@ export default function Receiving() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Received Date *</label>
-                            <input 
-                                type="date" 
-                                className="w-full rounded-lg border-slate-300 focus:ring-emerald-500 focus:border-emerald-500"
-                                value={formData.receivedDate}
-                                onChange={e => setFormData({...formData, receivedDate: e.target.value})}
-                            />
-                        </div>
-                        <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">Product Name *</label>
                             <input 
+                                id="input-product"
                                 type="text" 
                                 className="w-full rounded-lg border-slate-300 focus:ring-emerald-500 focus:border-emerald-500"
                                 placeholder="e.g. Frozen Shrimp"
@@ -112,6 +116,7 @@ export default function Receiving() {
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Quantity *</label>
                                 <input 
+                                    id="input-qty"
                                     type="number" 
                                     className="w-full rounded-lg border-slate-300 focus:ring-emerald-500 focus:border-emerald-500"
                                     value={formData.quantity}
@@ -121,6 +126,7 @@ export default function Receiving() {
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Unit</label>
                                 <select 
+                                    id="input-uom"
                                     className="w-full rounded-lg border-slate-300 focus:ring-emerald-500 focus:border-emerald-500"
                                     value={formData.uom}
                                     onChange={e => setFormData({...formData, uom: e.target.value})}
@@ -135,6 +141,7 @@ export default function Receiving() {
                     </div>
                     <div className="mt-8 flex justify-end">
                         <button 
+                            id="btn-step-2"
                             onClick={() => setStep(2)}
                             disabled={!formData.supplierId || !formData.productName}
                             className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
@@ -146,13 +153,14 @@ export default function Receiving() {
             )}
 
             {step === 2 && (
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 animate-in fade-in slide-in-from-right-4">
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 animate-in fade-in slide-in-from-right-4 relative">
                     <h2 className="text-lg font-semibold mb-6">Traceability & Documents</h2>
                     
                     <div className="mb-6">
                         <label className="block text-sm font-medium text-slate-700 mb-1">Traceability Lot Code (TLC) *</label>
                         <div className="flex gap-2">
                             <input 
+                                id="input-tlc"
                                 type="text" 
                                 className="flex-1 rounded-lg border-slate-300 focus:ring-emerald-500 focus:border-emerald-500 font-mono"
                                 value={formData.tlc}
@@ -162,12 +170,24 @@ export default function Receiving() {
                                 Auto-Gen
                             </button>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">Must match the TLC assigned by the packing facility.</p>
+                        
+                        <div className="mt-2 flex items-center justify-between">
+                            <p className="text-xs text-slate-500">Must match the TLC assigned by the packing facility.</p>
+                            
+                            {/* DEMO STEP: Upstream Data Link */}
+                            <button 
+                                id="link-upstream-data"
+                                onClick={() => setShowUpstreamModal(true)}
+                                className="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center"
+                            >
+                                <CheckCircle2 size={14} className="mr-1" /> View Upstream Data
+                            </button>
+                        </div>
                     </div>
 
                     <div className="mb-6">
                         <label className="block text-sm font-medium text-slate-700 mb-2">Upload Required Documents</label>
-                        <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:bg-slate-50 transition-colors relative">
+                        <div id="dropzone-docs" className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:bg-slate-50 transition-colors relative">
                             <input 
                                 type="file" 
                                 multiple
@@ -197,6 +217,22 @@ export default function Receiving() {
                         </div>
                     )}
 
+                    {/* DEMO STEP: Completeness Meter */}
+                    <div id="meter-completeness" className="mb-8 bg-slate-50 rounded-lg p-4 border border-slate-100 flex items-center gap-4">
+                        <div className="flex-1">
+                            <div className="flex justify-between text-sm mb-1">
+                                <span className="font-medium text-slate-700">Data Completeness</span>
+                                <span className="font-bold text-emerald-600">100%</span>
+                            </div>
+                            <div className="w-full bg-slate-200 rounded-full h-2">
+                                <div className="bg-emerald-500 h-2 rounded-full w-full"></div>
+                            </div>
+                        </div>
+                        <div className="bg-white px-3 py-1 rounded border border-slate-200 text-xs font-mono text-slate-500">
+                            ALL KDEs PRESENT
+                        </div>
+                    </div>
+
                     <div className="flex justify-between">
                         <button 
                             onClick={() => setStep(1)}
@@ -205,12 +241,48 @@ export default function Receiving() {
                             Back
                         </button>
                         <button 
+                            id="btn-submit-receipt"
                             onClick={handleSubmit}
                             className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium shadow-sm"
                         >
                             Submit Receipt
                         </button>
                     </div>
+
+                    {/* Upstream Data Modal (Simulated) */}
+                    {showUpstreamModal && (
+                        <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-10 flex items-center justify-center p-4 rounded-xl">
+                            <div className="bg-white w-full max-w-md border border-slate-200 shadow-xl rounded-lg overflow-hidden animate-in zoom-in-95">
+                                <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                                    <h3 className="font-bold text-slate-800">Upstream Traceability Data</h3>
+                                    <button onClick={() => setShowUpstreamModal(false)} id="btn-close-upstream" className="text-slate-400 hover:text-slate-600">
+                                        <X size={18} />
+                                    </button>
+                                </div>
+                                <div className="p-4 space-y-4">
+                                    <div className="flex gap-3">
+                                        <div className="mt-0.5 bg-blue-100 p-1.5 rounded text-blue-600"><MapPin size={16}/></div>
+                                        <div>
+                                            <p className="text-xs font-bold text-slate-500 uppercase">Harvest</p>
+                                            <p className="text-sm font-medium text-slate-900">Chiang Mai Valley Farm</p>
+                                            <p className="text-xs text-slate-500">Dec 01, 2023</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <div className="mt-0.5 bg-cyan-100 p-1.5 rounded text-cyan-600"><Thermometer size={16}/></div>
+                                        <div>
+                                            <p className="text-xs font-bold text-slate-500 uppercase">Cooling</p>
+                                            <p className="text-sm font-medium text-slate-900">Hydrocooling to 10°C</p>
+                                            <p className="text-xs text-slate-500">Dec 02, 2023</p>
+                                        </div>
+                                    </div>
+                                    <div className="bg-green-50 p-3 rounded text-xs text-green-700 border border-green-100">
+                                        ✓ Validated against Supplier Uploads
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -229,23 +301,6 @@ export default function Receiving() {
                             className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium"
                         >
                             View Inventory
-                        </button>
-                        <button 
-                            onClick={() => {
-                                setStep(1);
-                                setFormData({
-                                    supplierId: '',
-                                    productName: '',
-                                    quantity: '',
-                                    uom: 'Cases',
-                                    receivedDate: new Date().toISOString().split('T')[0],
-                                    tlc: `TLC-${Math.floor(Math.random() * 10000)}`,
-                                    files: []
-                                });
-                            }}
-                            className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-2 rounded-lg font-medium"
-                        >
-                            Log Another
                         </button>
                     </div>
                 </div>

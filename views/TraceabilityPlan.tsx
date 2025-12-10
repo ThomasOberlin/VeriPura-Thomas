@@ -1,0 +1,312 @@
+import React, { useState, useEffect } from 'react';
+import { BookOpen, Map, Phone, FileText, Edit2, Save, X, Plus, Trash2, MapPin } from 'lucide-react';
+import { useAppContext } from '../App';
+import { TraceabilityPlan } from '../types';
+
+export default function TraceabilityPlanView() {
+    const { traceabilityPlan, updateTraceabilityPlan } = useAppContext();
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState<TraceabilityPlan | null>(null);
+
+    useEffect(() => {
+        if (traceabilityPlan) {
+            setFormData(JSON.parse(JSON.stringify(traceabilityPlan)));
+        }
+    }, [traceabilityPlan]);
+
+    const handleSave = () => {
+        if (formData) {
+            updateTraceabilityPlan(formData);
+            setIsEditing(false);
+        }
+    };
+
+    const handleCancel = () => {
+        if (traceabilityPlan) {
+            setFormData(JSON.parse(JSON.stringify(traceabilityPlan)));
+        }
+        setIsEditing(false);
+    };
+
+    const handleChange = (field: keyof TraceabilityPlan, value: string) => {
+        setFormData(prev => prev ? ({ ...prev, [field]: value }) : null);
+    };
+
+    const handleContactChange = (field: string, value: string) => {
+        setFormData(prev => prev ? ({
+            ...prev,
+            pointOfContact: { ...prev.pointOfContact, [field]: value }
+        }) : null);
+    };
+
+    const addMap = () => {
+        setFormData(prev => prev ? ({
+            ...prev,
+            farmMaps: [
+                ...prev.farmMaps, 
+                { 
+                    id: `MAP-${Date.now()}`, 
+                    name: 'New Field', 
+                    location: 'Enter Location', 
+                    coordinates: [] 
+                }
+            ]
+        }) : null);
+    };
+
+    const removeMap = (id: string) => {
+        setFormData(prev => prev ? ({
+            ...prev,
+            farmMaps: prev.farmMaps.filter(m => m.id !== id)
+        }) : null);
+    };
+
+    const updateMap = (id: string, field: string, value: string) => {
+        setFormData(prev => prev ? ({
+            ...prev,
+            farmMaps: prev.farmMaps.map(m => m.id === id ? { ...m, [field]: value } : m)
+        }) : null);
+    };
+
+    if (!formData) return <div>Loading...</div>;
+
+    return (
+        <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900">Traceability Plan</h1>
+                    <p className="text-slate-500">Required under § 1.1315 of the Food Traceability Rule.</p>
+                </div>
+                {!isEditing ? (
+                    <button 
+                        onClick={() => setIsEditing(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+                    >
+                        <Edit2 size={16} /> Edit Plan
+                    </button>
+                ) : (
+                    <div className="flex gap-2">
+                        <button 
+                            onClick={handleCancel}
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                        >
+                            <X size={16} /> Cancel
+                        </button>
+                        <button 
+                            onClick={handleSave}
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
+                        >
+                            <Save size={16} /> Save Changes
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* Record Keeping Procedures (§ 1.1315(a)(1)) */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
+                <div className="flex items-start gap-4 mb-4">
+                    <div className="bg-blue-100 p-2 rounded-lg text-blue-600 shrink-0">
+                        <FileText size={24} />
+                    </div>
+                    <div className="w-full">
+                        <h2 className="text-lg font-bold text-slate-900 mb-2">Record Maintenance Procedures (§ 1.1315(a)(1))</h2>
+                        <p className="text-xs text-slate-500 mb-4">Describe the procedures used to maintain the records required by the rule, including the format and location of the records.</p>
+                        {isEditing ? (
+                            <textarea
+                                value={formData.procedureDescription}
+                                onChange={(e) => handleChange('procedureDescription', e.target.value)}
+                                className="w-full h-32 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                                placeholder="Describe your record maintenance procedures..."
+                            />
+                        ) : (
+                            <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">
+                                {formData.procedureDescription}
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* FTL Identification & TLC Assignment */}
+            <div className="grid grid-cols-1 gap-6">
+                {/* FTL Identification (§ 1.1315(a)(2)) */}
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                    <h3 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
+                        <BookOpen size={18} className="text-emerald-600" /> FTL Food Identification (§ 1.1315(a)(2))
+                    </h3>
+                    <p className="text-xs text-slate-500 mb-4">Describe the procedures used to identify foods on the Food Traceability List that you manufacture, process, pack, or hold.</p>
+                    {isEditing ? (
+                        <textarea
+                            value={formData.ftlIdentificationProcedure}
+                            onChange={(e) => handleChange('ftlIdentificationProcedure', e.target.value)}
+                            className="w-full h-24 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                            placeholder="Describe how you identify FTL foods..."
+                        />
+                    ) : (
+                        <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
+                            {formData.ftlIdentificationProcedure}
+                        </p>
+                    )}
+                </div>
+
+                {/* TLC Assignment (§ 1.1315(a)(3)) */}
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                    <h3 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
+                        <BookOpen size={18} className="text-purple-600" /> TLC Assignment (§ 1.1315(a)(3))
+                    </h3>
+                    <p className="text-xs text-slate-500 mb-4">Describe how you assign traceability lot codes to foods on the FTL, if applicable.</p>
+                    {isEditing ? (
+                        <textarea
+                            value={formData.tlcAssignmentProcedure}
+                            onChange={(e) => handleChange('tlcAssignmentProcedure', e.target.value)}
+                            className="w-full h-24 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                            placeholder="Describe your TLC assignment process..."
+                        />
+                    ) : (
+                        <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
+                            {formData.tlcAssignmentProcedure}
+                        </p>
+                    )}
+                </div>
+            </div>
+
+            {/* Farm Maps (§ 1.1315(a)(5)) */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                        <Map size={18} className="text-amber-600" /> Farm Maps (§ 1.1315(a)(5))
+                    </h3>
+                    {isEditing && (
+                        <button onClick={addMap} className="text-xs flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded transition-colors">
+                            <Plus size={14} /> Add Map
+                        </button>
+                    )}
+                </div>
+                <p className="text-xs text-slate-500 mb-4">
+                    For farms growing/raising FTL foods (other than eggs): Identify areas where FTL foods are grown, including location names and geographic coordinates.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {formData.farmMaps.map(map => (
+                        <div key={map.id} className="border border-slate-200 rounded-lg p-4 bg-slate-50 relative group">
+                            {isEditing && (
+                                <button 
+                                    onClick={() => removeMap(map.id)}
+                                    className="absolute top-2 right-2 text-slate-400 hover:text-red-500 p-1 bg-white rounded-full border border-slate-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <Trash2 size={14} />
+                                </button>
+                            )}
+                            
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Field Name / ID</label>
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            value={map.name}
+                                            onChange={(e) => updateMap(map.id, 'name', e.target.value)}
+                                            className="w-full p-2 border border-slate-300 rounded text-sm"
+                                        />
+                                    ) : (
+                                        <div className="font-bold text-slate-900 text-sm">{map.name}</div>
+                                    )}
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Location Description</label>
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            value={map.location}
+                                            onChange={(e) => updateMap(map.id, 'location', e.target.value)}
+                                            className="w-full p-2 border border-slate-300 rounded text-sm"
+                                        />
+                                    ) : (
+                                        <div className="text-xs text-slate-600">{map.location}</div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Coordinates / Bounds</label>
+                                    <div className="bg-slate-200 h-24 rounded flex items-center justify-center text-slate-500 text-xs border border-slate-300 relative overflow-hidden">
+                                        <MapPin className="absolute opacity-10 w-16 h-16" />
+                                        {isEditing ? (
+                                            <span className="z-10 bg-white/80 px-2 py-1 rounded">Interactive Map Editor Placeholder</span>
+                                        ) : (
+                                            <span className="z-10 font-mono bg-white/80 px-2 py-1 rounded">
+                                                {map.coordinates.length > 0 
+                                                    ? `${map.coordinates[0].lat}, ${map.coordinates[0].lng}` 
+                                                    : 'No coordinates set'}
+                                            </span>
+                                        )}
+                                    </div>
+                                    {isEditing && (
+                                        <p className="text-[10px] text-slate-400 mt-1 italic">
+                                            (In a real app, users would draw polygon boundaries on an interactive map here.)
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                    {formData.farmMaps.length === 0 && (
+                        <div className="col-span-2 p-8 text-center text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-300">
+                            No farm maps defined.
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Point of Contact (§ 1.1315(a)(4)) */}
+            <div className="bg-slate-900 text-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center gap-3 mb-4">
+                    <Phone size={20} className="text-emerald-400" />
+                    <h3 className="font-bold text-white">Regulatory Point of Contact (§ 1.1315(a)(4))</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Name</label>
+                        {isEditing ? (
+                            <input
+                                type="text"
+                                value={formData.pointOfContact.name}
+                                onChange={(e) => handleContactChange('name', e.target.value)}
+                                className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-sm focus:border-emerald-500 outline-none"
+                            />
+                        ) : (
+                            <div className="font-bold text-lg">{formData.pointOfContact.name}</div>
+                        )}
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Email</label>
+                        {isEditing ? (
+                            <input
+                                type="email"
+                                value={formData.pointOfContact.email}
+                                onChange={(e) => handleContactChange('email', e.target.value)}
+                                className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-sm focus:border-emerald-500 outline-none"
+                            />
+                        ) : (
+                            <div className="text-slate-300">{formData.pointOfContact.email}</div>
+                        )}
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Phone</label>
+                        {isEditing ? (
+                            <input
+                                type="text"
+                                value={formData.pointOfContact.phone}
+                                onChange={(e) => handleContactChange('phone', e.target.value)}
+                                className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white text-sm focus:border-emerald-500 outline-none"
+                            />
+                        ) : (
+                            <div className="text-slate-300">{formData.pointOfContact.phone}</div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
