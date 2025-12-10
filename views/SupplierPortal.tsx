@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Camera, Check, Upload, ChevronRight, Globe, Thermometer, Box, Truck } from 'lucide-react';
+import { Camera, Check, Upload, ChevronRight, Globe, Thermometer, Box, Truck, MapPin, Sprout } from 'lucide-react';
 import { useAppContext } from '../App';
 
 export default function SupplierPortal() {
@@ -11,6 +11,8 @@ export default function SupplierPortal() {
         product: 'Mangoes',
         quantity: '',
         harvestDate: '',
+        farmName: '', // New Field
+        farmLocation: '', // New Field
         isCooled: false,
         container: ''
     });
@@ -28,6 +30,9 @@ export default function SupplierPortal() {
                         <p className="text-sm mt-2 font-medium bg-emerald-700/50 py-1 px-3 rounded-full inline-block">Welcome, Thai Mango Co.</p>
                     </div>
                     <div className="p-8 space-y-6">
+                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm text-blue-800">
+                            <strong>Note for Packers:</strong> You must enter Harvest Data on behalf of the grower to generate the initial Traceability Lot Code (TLC).
+                        </div>
                         <button 
                             id="btn-portal-start"
                             onClick={() => setStep(1)}
@@ -73,11 +78,45 @@ export default function SupplierPortal() {
                     </div>
                 )}
 
-                {/* Step 2: Harvest */}
+                {/* Step 2: Harvest (Updated for Farm Info) */}
                 {step === 2 && (
                     <div id="portal-step-2" className="animate-in slide-in-from-right-8 duration-300">
-                        <label className="block text-sm font-bold text-slate-900 mb-2">Harvest Date</label>
-                        <input id="input-portal-date" type="date" className="w-full p-4 rounded-xl border-slate-300 text-lg mb-6 bg-white" onChange={e => setFormData({...formData, harvestDate: e.target.value})} />
+                        <div className="flex items-center gap-2 mb-4 text-emerald-700 font-semibold">
+                            <Sprout size={20} />
+                            <span>Grower / Farm Details</span>
+                        </div>
+                        
+                        <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-4 mb-6">
+                            <div>
+                                <label className="block text-sm font-bold text-slate-900 mb-1">Harvest Date</label>
+                                <input id="input-portal-date" type="date" className="w-full p-3 rounded-lg border-slate-300" onChange={e => setFormData({...formData, harvestDate: e.target.value})} />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-bold text-slate-900 mb-1">Farm / Grower Name</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g. Chiang Mai Valley Farm"
+                                    className="w-full p-3 rounded-lg border-slate-300" 
+                                    value={formData.farmName}
+                                    onChange={e => setFormData({...formData, farmName: e.target.value})}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-slate-900 mb-1">Farm Location (GLN or Address)</label>
+                                <div className="relative">
+                                    <MapPin className="absolute left-3 top-3.5 text-slate-400" size={18} />
+                                    <input 
+                                        type="text" 
+                                        placeholder="Region or GPS Coords"
+                                        className="w-full p-3 pl-10 rounded-lg border-slate-300" 
+                                        value={formData.farmLocation}
+                                        onChange={e => setFormData({...formData, farmLocation: e.target.value})}
+                                    />
+                                </div>
+                            </div>
+                        </div>
                         
                         <div className="bg-white p-4 rounded-xl border border-slate-200 mb-6">
                             <label className="block text-sm font-bold text-slate-900 mb-2 flex items-center gap-2"><Thermometer size={16}/> Cooling Info</label>
@@ -87,6 +126,7 @@ export default function SupplierPortal() {
                             </button>
                             <input id="input-portal-cooling" type="hidden"/>
                         </div>
+                        
                         <button id="btn-portal-next-2" onClick={() => setStep(3)} disabled={!formData.harvestDate} className="w-full py-4 bg-emerald-600 text-white font-bold rounded-xl disabled:opacity-50">Next Step</button>
                     </div>
                 )}
@@ -96,7 +136,7 @@ export default function SupplierPortal() {
                     <div id="portal-step-3" className="animate-in slide-in-from-right-8 duration-300 text-center">
                         <div className="bg-white border-2 border-dashed border-slate-300 rounded-xl p-8 mb-6 cursor-pointer hover:bg-slate-50">
                             <Camera className="w-12 h-12 text-slate-400 mx-auto mb-2" />
-                            <p className="font-medium text-slate-600">Scan Phytosanitary Cert</p>
+                            <p className="font-medium text-slate-600">Scan Harvest Log / Ticket</p>
                         </div>
                         <button id="btn-portal-next-3" onClick={() => setStep(4)} className="w-full py-4 bg-emerald-600 text-white font-bold rounded-xl">Next Step</button>
                     </div>
@@ -106,9 +146,11 @@ export default function SupplierPortal() {
                 {step === 4 && (
                     <div id="portal-step-4" className="animate-in slide-in-from-right-8 duration-300">
                         <div className="bg-white p-4 rounded-xl border border-slate-200 mb-4">
-                            <label className="block text-sm font-bold text-slate-900 mb-2 flex items-center gap-2"><Box size={16}/> Packing Facility</label>
+                            <label className="block text-sm font-bold text-slate-900 mb-2 flex items-center gap-2"><Box size={16}/> Packing Facility (Initial Packer)</label>
                             <div className="text-sm text-slate-600">Thai Fresh Fruits - Main Packhouse</div>
-                            <div className="text-xs text-slate-400">TLC Assigned: TH-MG-2024-1234</div>
+                            <div className="mt-2 bg-emerald-50 text-emerald-700 text-xs p-2 rounded border border-emerald-100 font-mono">
+                                Generating TLC: TH-MG-2024-1234
+                            </div>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-slate-200 mb-6">
                             <label className="block text-sm font-bold text-slate-900 mb-2 flex items-center gap-2"><Truck size={16}/> Shipping Container</label>
@@ -125,8 +167,8 @@ export default function SupplierPortal() {
                         <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden mb-6">
                             <div className="p-4 flex justify-between"><span className="text-slate-500">Product</span> <span className="font-bold">{formData.product}</span></div>
                             <div className="p-4 flex justify-between"><span className="text-slate-500">Qty</span> <span className="font-bold">{formData.quantity} Cases</span></div>
-                            <div className="p-4 flex justify-between"><span className="text-slate-500">Harvest</span> <span className="font-bold">{formData.harvestDate}</span></div>
-                            <div className="p-4 flex justify-between"><span className="text-slate-500">Cooling</span> <span className="font-bold">{formData.isCooled ? 'Yes' : 'No'}</span></div>
+                            <div className="p-4 flex justify-between"><span className="text-slate-500">Harvest Date</span> <span className="font-bold">{formData.harvestDate}</span></div>
+                            <div className="p-4 flex justify-between"><span className="text-slate-500">Grower</span> <span className="font-bold text-right">{formData.farmName || 'N/A'}</span></div>
                         </div>
                         <button id="btn-portal-submit" onClick={() => setStep(6)} className="w-full py-4 bg-emerald-600 text-white font-bold rounded-xl shadow-lg">Submit Shipment</button>
                     </div>

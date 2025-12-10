@@ -18,7 +18,8 @@ import {
   Plus,
   Book,
   LifeBuoy,
-  PlayCircle
+  PlayCircle,
+  Factory
 } from 'lucide-react';
 
 import { MOCK_ALERTS, MOCK_PRODUCTS, MOCK_SUPPLIERS, MOCK_PLAN } from './services/mockData';
@@ -28,6 +29,7 @@ import { AppState, Product, Supplier, TraceabilityPlan, DemoScenario } from './t
 import Dashboard from './views/Dashboard';
 import Inventory from './views/Inventory';
 import Receiving from './views/Receiving';
+import Transformation from './views/Transformation';
 import Suppliers from './views/Suppliers';
 import Reports from './views/Reports';
 import Compliance from './views/Compliance';
@@ -135,6 +137,7 @@ export default function App() {
         switch (currentView) {
             case 'dashboard': return <Dashboard />;
             case 'receiving': return <Receiving />;
+            case 'transformation': return <Transformation />;
             case 'inventory': return <Inventory />;
             case 'product-detail': return <ProductDetail productId={viewParams} />;
             case 'suppliers': return <Suppliers />;
@@ -208,6 +211,7 @@ export default function App() {
                             <div className="px-4 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Operations</div>
                             <NavItem id="nav-dashboard" label="Dashboard" icon={LayoutDashboard} />
                             <NavItem id="nav-receiving" label="Receiving" icon={PackageCheck} />
+                            <NavItem id="nav-transformation" label="Production Log" icon={Factory} />
                             <NavItem id="nav-inventory" label="Inventory" icon={Boxes} />
                             
                             <div className="px-4 pt-6 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Partners</div>

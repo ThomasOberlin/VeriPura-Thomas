@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Upload, X, FileText, CheckCircle2, AlertCircle, ChevronDown, MapPin, Thermometer } from 'lucide-react';
+import { Upload, X, FileText, CheckCircle2, AlertCircle, ChevronDown, MapPin, Thermometer, Anchor, Calendar, Ship } from 'lucide-react';
 import { useAppContext } from '../App';
 import { ProductType, ShipmentStatus } from '../types';
 
@@ -11,10 +11,16 @@ export default function Receiving() {
     const [formData, setFormData] = useState({
         supplierId: '',
         productName: '',
+        category: ProductType.PRODUCE,
         quantity: '',
         uom: 'Cases',
         receivedDate: new Date().toISOString().split('T')[0],
         tlc: `TLC-${Math.floor(Math.random() * 10000)}`,
+        // Seafood Specifics
+        vesselName: '',
+        faoZone: '',
+        harvestDateStart: '',
+        harvestDateEnd: '',
         files: [] as File[]
     });
 
@@ -38,20 +44,43 @@ export default function Receiving() {
         e.preventDefault();
         const supplier = suppliers.find(s => s.id === formData.supplierId);
         
+        const kdeData: any = {};
+        if (formData.category === ProductType.SEAFOOD) {
+            kdeData["Vessel Name"] = formData.vesselName;
+            kdeData["Harvest Date Range"] = `${formData.harvestDateStart} to ${formData.harvestDateEnd}`;
+            kdeData["FAO Zone"] = formData.faoZone;
+            kdeData["First Land-Based Receiver"] = supplier?.name;
+        }
+
         addProduct({
             id: `PROD-${Date.now()}`,
             tlc: formData.tlc,
             name: formData.productName,
-            category: supplier?.categories[0] || ProductType.PRODUCE,
+            category: formData.category,
             supplierId: formData.supplierId,
             supplierName: supplier?.name || 'Unknown',
             receivedDate: formData.receivedDate,
             quantity: Number(formData.quantity),
             uom: formData.uom,
             isFTL: true,
-            completeness: 100, // Demo assumes perfect entry
+            completeness: 100,
             status: ShipmentStatus.COMPLIANT,
-            events: [],
+            events: [
+                {
+                    id: `evt-rec-${Date.now()}`,
+                    type: 'Receiving',
+                    date: formData.receivedDate,
+                    location: 'VeriPura Distribution Center',
+                    performer: 'VeriPura Imports',
+                    documents: [],
+                    status: 'Complete',
+                    details: formData.category === ProductType.SEAFOOD ? `Received from vessel ${formData.vesselName}` : 'Standard receipt',
+                    kdeData: {
+                        tlcAssigned: formData.category === ProductType.SEAFOOD ? formData.tlc : undefined, // Importer acts as FLBR if direct from vessel
+                        ...kdeData
+                    }
+                }
+            ],
         });
         
         setStep(3);
@@ -61,7 +90,7 @@ export default function Receiving() {
         <div className="max-w-4xl mx-auto relative" id="receiving-view">
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-slate-900">Log New Receipt</h1>
-                <p className="text-slate-500">Enter details for incoming shipment from Asian suppliers.</p>
+                <p className="text-slate-500">Enter details for incoming shipment. Form adapts to product category requirements.</p>
             </div>
 
             {/* Progress */}
@@ -101,6 +130,20 @@ export default function Receiving() {
                                 ))}
                             </select>
                         </div>
+                        
+                        {/* Product Category Selection */}
+                         <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Product Category *</label>
+                            <select 
+                                id="input-category"
+                                className="w-full rounded-lg border-slate-300 focus:ring-emerald-500 focus:border-emerald-500"
+                                value={formData.category}
+                                onChange={e => setFormData({...formData, category: e.target.value as ProductType})}
+                            >
+                                {Object.values(ProductType).map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                        </div>
+
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">Product Name *</label>
                             <input 
@@ -139,6 +182,69 @@ export default function Receiving() {
                             </div>
                         </div>
                     </div>
+
+                    {/* SEAFOOD SPECIFIC FIELDS */}
+                    {formData.category === ProductType.SEAFOOD && (
+                        <div id="section-seafood" className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6 animate-in fade-in">
+                            <div className="flex items-center gap-2 mb-4 text-blue-800">
+                                <Anchor size={20} />
+                                <h3 className="font-bold">First Land-Based Receiver Data</h3>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-blue-900 mb-1">Vessel Name / ID</label>
+                                    <div className="relative">
+                                        <Ship size={16} className="absolute left-3 top-3 text-blue-400" />
+                                        <input 
+                                            id="input-vessel"
+                                            type="text"
+                                            placeholder="e.g. Ocean Spirit II" 
+                                            className="w-full pl-9 rounded-lg border-blue-200 focus:ring-blue-500 focus:border-blue-500"
+                                            value={formData.vesselName}
+                                            onChange={e => setFormData({...formData, vesselName: e.target.value})}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-blue-900 mb-1">FAO Zone / Harvest Location</label>
+                                    <div className="relative">
+                                        <MapPin size={16} className="absolute left-3 top-3 text-blue-400" />
+                                        <input 
+                                            id="input-fao"
+                                            type="text"
+                                            placeholder="e.g. FAO Zone 71" 
+                                            className="w-full pl-9 rounded-lg border-blue-200 focus:ring-blue-500 focus:border-blue-500"
+                                            value={formData.faoZone}
+                                            onChange={e => setFormData({...formData, faoZone: e.target.value})}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-blue-900 mb-1">Harvest Start Date</label>
+                                        <input 
+                                            id="input-harvest-start"
+                                            type="date"
+                                            className="w-full rounded-lg border-blue-200 focus:ring-blue-500 focus:border-blue-500"
+                                            value={formData.harvestDateStart}
+                                            onChange={e => setFormData({...formData, harvestDateStart: e.target.value})}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-blue-900 mb-1">Harvest End Date</label>
+                                        <input 
+                                            id="input-harvest-end"
+                                            type="date"
+                                            className="w-full rounded-lg border-blue-200 focus:ring-blue-500 focus:border-blue-500"
+                                            value={formData.harvestDateEnd}
+                                            onChange={e => setFormData({...formData, harvestDateEnd: e.target.value})}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="mt-8 flex justify-end">
                         <button 
                             id="btn-step-2"
@@ -260,25 +366,43 @@ export default function Receiving() {
                                     </button>
                                 </div>
                                 <div className="p-4 space-y-4">
-                                    <div className="flex gap-3">
-                                        <div className="mt-0.5 bg-blue-100 p-1.5 rounded text-blue-600"><MapPin size={16}/></div>
-                                        <div>
-                                            <p className="text-xs font-bold text-slate-500 uppercase">Harvest</p>
-                                            <p className="text-sm font-medium text-slate-900">Chiang Mai Valley Farm</p>
-                                            <p className="text-xs text-slate-500">Dec 01, 2023</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-3">
-                                        <div className="mt-0.5 bg-cyan-100 p-1.5 rounded text-cyan-600"><Thermometer size={16}/></div>
-                                        <div>
-                                            <p className="text-xs font-bold text-slate-500 uppercase">Cooling</p>
-                                            <p className="text-sm font-medium text-slate-900">Hydrocooling to 10°C</p>
-                                            <p className="text-xs text-slate-500">Dec 02, 2023</p>
-                                        </div>
-                                    </div>
-                                    <div className="bg-green-50 p-3 rounded text-xs text-green-700 border border-green-100">
-                                        ✓ Validated against Supplier Uploads
-                                    </div>
+                                    {formData.category === ProductType.SEAFOOD ? (
+                                        <>
+                                             <div className="flex gap-3">
+                                                <div className="mt-0.5 bg-blue-100 p-1.5 rounded text-blue-600"><Ship size={16}/></div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase">Harvest Vessel</p>
+                                                    <p className="text-sm font-medium text-slate-900">{formData.vesselName || 'Ocean Spirit II'}</p>
+                                                    <p className="text-xs text-slate-500">Landing Date: Dec 01, 2023</p>
+                                                </div>
+                                            </div>
+                                            <div className="bg-green-50 p-3 rounded text-xs text-green-700 border border-green-100">
+                                                ✓ Validated against Landing Receipt
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="flex gap-3">
+                                                <div className="mt-0.5 bg-blue-100 p-1.5 rounded text-blue-600"><MapPin size={16}/></div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase">Harvest</p>
+                                                    <p className="text-sm font-medium text-slate-900">Chiang Mai Valley Farm</p>
+                                                    <p className="text-xs text-slate-500">Dec 01, 2023</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-3">
+                                                <div className="mt-0.5 bg-cyan-100 p-1.5 rounded text-cyan-600"><Thermometer size={16}/></div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-500 uppercase">Cooling</p>
+                                                    <p className="text-sm font-medium text-slate-900">Hydrocooling to 10°C</p>
+                                                    <p className="text-xs text-slate-500">Dec 02, 2023</p>
+                                                </div>
+                                            </div>
+                                            <div className="bg-green-50 p-3 rounded text-xs text-green-700 border border-green-100">
+                                                ✓ Validated against Supplier Uploads
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>

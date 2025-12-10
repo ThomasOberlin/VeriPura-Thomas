@@ -1,3 +1,4 @@
+
 import { Supplier, Product, ShipmentStatus, SupplierStatus, ProductType, TraceabilityEvent, TraceabilityPlan } from '../types';
 
 export const MOCK_SUPPLIERS: Supplier[] = [
@@ -60,6 +61,18 @@ export const MOCK_SUPPLIERS: Supplier[] = [
         complianceScore: 92,
         categories: [ProductType.PRODUCE],
         lastShipmentDate: '2023-11-02',
+    },
+    {
+        id: 'SUP-006',
+        name: 'Bangkok Spice Traders',
+        country: 'Thailand',
+        contactName: 'Ploy Thong',
+        email: 'ploy@bkspice.example.com',
+        phone: '+66 2 999 8888',
+        status: SupplierStatus.VERIFIED,
+        complianceScore: 96,
+        categories: [ProductType.SPICES],
+        lastShipmentDate: '2023-11-10',
     }
 ];
 
@@ -355,6 +368,55 @@ export const MOCK_PRODUCTS: Product[] = [
         status: ShipmentStatus.COMPLIANT,
         expirationDate: '2023-11-09',
         events: generateSproutsEvents(new Date('2023-11-02'), 'US-SP-2023-228')
+    },
+    // New Raw Materials for Curry Paste Demo
+    {
+        id: 'RM-001',
+        tlc: 'RM-CHI-24-001',
+        name: 'Fresh Red Chili Peppers',
+        category: ProductType.PRODUCE,
+        supplierId: 'SUP-006',
+        supplierName: 'Bangkok Spice Traders',
+        receivedDate: '2024-01-10',
+        quantity: 500,
+        uom: 'kg',
+        isFTL: true,
+        ftlCategory: 'Peppers (Fresh)',
+        completeness: 100,
+        status: ShipmentStatus.COMPLIANT,
+        events: []
+    },
+    {
+        id: 'RM-002',
+        tlc: 'RM-GAL-24-002',
+        name: 'Fresh Galangal',
+        category: ProductType.PRODUCE,
+        supplierId: 'SUP-006',
+        supplierName: 'Bangkok Spice Traders',
+        receivedDate: '2024-01-10',
+        quantity: 200,
+        uom: 'kg',
+        isFTL: false, // Galangal not on FTL (but part of recipe)
+        ftlCategory: undefined,
+        completeness: 100,
+        status: ShipmentStatus.COMPLIANT,
+        events: []
+    },
+    {
+        id: 'RM-003',
+        tlc: 'RM-SHR-24-003',
+        name: 'Shrimp Paste',
+        category: ProductType.SEAFOOD,
+        supplierId: 'SUP-002',
+        supplierName: 'Vietnam Seafood Exports',
+        receivedDate: '2024-01-08',
+        quantity: 100,
+        uom: 'kg',
+        isFTL: true,
+        ftlCategory: 'Crustaceans',
+        completeness: 100,
+        status: ShipmentStatus.COMPLIANT,
+        events: []
     }
 ];
 

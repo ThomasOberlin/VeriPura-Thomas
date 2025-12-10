@@ -1,6 +1,6 @@
 
 import { DemoScenario } from '../types';
-import { Package, ShieldCheck, Globe } from 'lucide-react';
+import { Package, ShieldCheck, Globe, Anchor, Factory } from 'lucide-react';
 
 export const DEMO_SCENARIOS: DemoScenario[] = [
     {
@@ -57,6 +57,7 @@ export const DEMO_SCENARIOS: DemoScenario[] = [
                 narration: "Next, I select 'Nam Dok Mai Mangoes'. Notice the FDA FTL badge appears, indicating this requires full traceability.",
                 targetElement: '#input-product',
                 actions: [
+                    { type: 'fill', target: '#input-category', value: 'Fresh Produce' },
                     { type: 'fill', target: '#input-product', value: 'Nam Dok Mai Mangoes' }
                 ]
             },
@@ -116,6 +117,152 @@ export const DEMO_SCENARIOS: DemoScenario[] = [
                 title: 'View in Inventory',
                 narration: "The shipment appears in our inventory, fully compliant and ready for audit.",
                 path: 'inventory'
+            }
+        ]
+    },
+    {
+        id: 'seafood-import',
+        title: 'Thai Seafood Traceability',
+        role: 'Seafood Importer',
+        icon: Anchor,
+        description: 'Track wild-caught seafood from the First Land-Based Receiver to import.',
+        durationSeconds: 100,
+        persona: { name: 'David', avatarInitials: 'DM', company: 'Global Seafoods Inc.' },
+        steps: [
+            {
+                id: 1,
+                title: 'Seafood Compliance',
+                narration: "Hello, I'm David. Importing seafood under FSMA 204 is complex because we need data from the 'First Land-Based Receiver', often a port facility in Thailand.",
+                path: 'dashboard'
+            },
+            {
+                id: 2,
+                title: 'Start Receipt',
+                narration: "I'm receiving a container of Yellowfin Tuna. Let's log it.",
+                targetElement: '#nav-receiving',
+                path: 'receiving'
+            },
+            {
+                id: 3,
+                title: 'Select Supplier',
+                narration: "I select Vietnam Seafood Exports. They are the aggregator, but not the harvester.",
+                targetElement: '#input-supplier',
+                actions: [
+                    { type: 'fill', target: '#input-supplier', value: 'SUP-002' }
+                ]
+            },
+            {
+                id: 4,
+                title: 'Select Category',
+                narration: "Crucially, I select 'Seafood' as the category. Watch how the form adapts.",
+                targetElement: '#input-category',
+                actions: [
+                    { type: 'fill', target: '#input-category', value: 'Seafood' },
+                    { type: 'fill', target: '#input-product', value: 'Yellowfin Tuna Loins' },
+                    { type: 'fill', target: '#input-qty', value: '2000' }
+                ]
+            },
+            {
+                id: 5,
+                title: 'Seafood Specifics',
+                narration: "The system now demands 'First Land-Based Receiver' data. I must enter the Vessel Name and Harvest Date Range.",
+                targetElement: '#section-seafood',
+                actions: [
+                    { type: 'fill', target: '#input-vessel', value: 'Ocean Spirit II' },
+                    { type: 'fill', target: '#input-fao', value: 'FAO Zone 71 (Pacific)' },
+                    { type: 'fill', target: '#input-harvest-start', value: '2023-11-20' },
+                    { type: 'fill', target: '#input-harvest-end', value: '2023-11-25' }
+                ]
+            },
+            {
+                id: 6,
+                title: 'Next Step',
+                narration: "This ensures we capture the critical link to the wild harvest event.",
+                targetElement: '#btn-step-2',
+                actions: [{ type: 'click', target: '#btn-step-2' }]
+            },
+            {
+                id: 7,
+                title: 'Verify TLC',
+                narration: "The Traceability Lot Code was assigned by the port facility when the fish landed. We preserve this code.",
+                targetElement: '#input-tlc',
+                actions: [{ type: 'fill', target: '#input-tlc', value: 'VN-YF-2023-4421' }]
+            },
+            {
+                id: 8,
+                title: 'Submit',
+                narration: "I submit the record. We now have end-to-end traceability from the fishing vessel to our warehouse.",
+                targetElement: '#btn-submit-receipt',
+                actions: [{ type: 'click', target: '#btn-submit-receipt' }]
+            }
+        ]
+    },
+    {
+        id: 'curry-paste-prod',
+        title: 'Curry Paste Production',
+        role: 'Food Manufacturer',
+        icon: Factory,
+        description: 'Perform a Transformation event linking ingredient TLCs to a finished good.',
+        durationSeconds: 110,
+        persona: { name: 'Priya', avatarInitials: 'PM', company: 'Bangkok Spice Works' },
+        steps: [
+            {
+                id: 1,
+                title: 'Transformation Overview',
+                narration: "I'm Priya. Making Curry Paste is a 'Transformation' event. I need to link the TLCs of my ingredients (like peppers and shrimp paste) to the finished jar's TLC.",
+                path: 'dashboard'
+            },
+            {
+                id: 2,
+                title: 'Go to Production',
+                narration: "I go to the 'Transformation' log to record today's production batch.",
+                targetElement: '#nav-transformation',
+                path: 'transformation'
+            },
+            {
+                id: 3,
+                title: 'Select Inputs',
+                narration: "Here are my available raw materials. I select the Chili Peppers and Shrimp Paste I'm using today.",
+                targetElement: '#step-inputs',
+                actions: [
+                    { type: 'click', target: '#row-RM-001', delay: 500 }, // Chili
+                    { type: 'click', target: '#row-RM-003', delay: 500 }  // Shrimp Paste
+                ]
+            },
+            {
+                id: 4,
+                title: 'Next Step',
+                narration: "The system verifies these ingredients are available and compliant.",
+                targetElement: '#btn-next-to-output',
+                actions: [{ type: 'click', target: '#btn-next-to-output' }]
+            },
+            {
+                id: 5,
+                title: 'Define Output',
+                narration: "Now I define the finished product: Thai Red Curry Paste.",
+                targetElement: '#step-output',
+                actions: [
+                    { type: 'fill', target: '#input-out-qty', value: '100' }
+                ]
+            },
+            {
+                id: 6,
+                title: 'Generate Output TLC',
+                narration: "The system automatically generates a new Traceability Lot Code (CP-2024-XXXX) for this batch.",
+                targetElement: '#step-output'
+            },
+            {
+                id: 7,
+                title: 'Log Production',
+                narration: "I click 'Log Production'. The system creates the immutable link between the input ingredients and the final product.",
+                targetElement: '#btn-submit-transform',
+                actions: [{ type: 'click', target: '#btn-submit-transform' }]
+            },
+            {
+                id: 8,
+                title: 'Completion',
+                narration: "Done. Any buyer scanning the Curry Paste TLC can now trace it back to the specific batch of chili peppers.",
+                targetElement: '#btn-submit-transform' // Stay on success screen
             }
         ]
     },
