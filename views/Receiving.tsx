@@ -1,0 +1,255 @@
+import React, { useState } from 'react';
+import { Upload, X, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useAppContext } from '../App';
+import { ProductType, ShipmentStatus } from '../types';
+
+export default function Receiving() {
+    const { suppliers, addProduct, setView } = useAppContext();
+    const [step, setStep] = useState(1);
+    const [formData, setFormData] = useState({
+        supplierId: '',
+        productName: '',
+        quantity: '',
+        uom: 'Cases',
+        receivedDate: new Date().toISOString().split('T')[0],
+        tlc: `TLC-${Math.floor(Math.random() * 10000)}`,
+        files: [] as File[]
+    });
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setFormData(prev => ({
+                ...prev,
+                files: [...prev.files, ...Array.from(e.target.files || [])]
+            }));
+        }
+    };
+
+    const removeFile = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            files: prev.files.filter((_, i) => i !== index)
+        }));
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const supplier = suppliers.find(s => s.id === formData.supplierId);
+        
+        addProduct({
+            id: `PROD-${Date.now()}`,
+            tlc: formData.tlc,
+            name: formData.productName,
+            category: supplier?.categories[0] || ProductType.PRODUCE,
+            supplierId: formData.supplierId,
+            supplierName: supplier?.name || 'Unknown',
+            receivedDate: formData.receivedDate,
+            quantity: Number(formData.quantity),
+            uom: formData.uom,
+            isFTL: true,
+            completeness: 85, // Mock initial score
+            status: ShipmentStatus.PENDING,
+            events: [],
+        });
+        
+        // Show success state
+        setStep(3);
+    };
+
+    return (
+        <div className="max-w-4xl mx-auto">
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold text-slate-900">Log New Receipt</h1>
+                <p className="text-slate-500">Enter details for incoming shipment from Asian suppliers.</p>
+            </div>
+
+            {/* Progress */}
+            <div className="flex items-center mb-8">
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full ${step >= 1 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'} font-bold text-sm`}>1</div>
+                <div className={`flex-1 h-1 mx-4 ${step >= 2 ? 'bg-emerald-600' : 'bg-slate-200'}`}></div>
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full ${step >= 2 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'} font-bold text-sm`}>2</div>
+                <div className={`flex-1 h-1 mx-4 ${step >= 3 ? 'bg-emerald-600' : 'bg-slate-200'}`}></div>
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full ${step >= 3 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'} font-bold text-sm`}>3</div>
+            </div>
+
+            {step === 1 && (
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 animate-in fade-in slide-in-from-right-4">
+                    <h2 className="text-lg font-semibold mb-6">Basic Information</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Supplier *</label>
+                            <select 
+                                className="w-full rounded-lg border-slate-300 focus:ring-emerald-500 focus:border-emerald-500"
+                                value={formData.supplierId}
+                                onChange={e => setFormData({...formData, supplierId: e.target.value})}
+                            >
+                                <option value="">Select Supplier</option>
+                                {suppliers.map(s => (
+                                    <option key={s.id} value={s.id}>{s.name} ({s.country})</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Received Date *</label>
+                            <input 
+                                type="date" 
+                                className="w-full rounded-lg border-slate-300 focus:ring-emerald-500 focus:border-emerald-500"
+                                value={formData.receivedDate}
+                                onChange={e => setFormData({...formData, receivedDate: e.target.value})}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Product Name *</label>
+                            <input 
+                                type="text" 
+                                className="w-full rounded-lg border-slate-300 focus:ring-emerald-500 focus:border-emerald-500"
+                                placeholder="e.g. Frozen Shrimp"
+                                value={formData.productName}
+                                onChange={e => setFormData({...formData, productName: e.target.value})}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Quantity *</label>
+                                <input 
+                                    type="number" 
+                                    className="w-full rounded-lg border-slate-300 focus:ring-emerald-500 focus:border-emerald-500"
+                                    value={formData.quantity}
+                                    onChange={e => setFormData({...formData, quantity: e.target.value})}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Unit</label>
+                                <select 
+                                    className="w-full rounded-lg border-slate-300 focus:ring-emerald-500 focus:border-emerald-500"
+                                    value={formData.uom}
+                                    onChange={e => setFormData({...formData, uom: e.target.value})}
+                                >
+                                    <option>Cases</option>
+                                    <option>kg</option>
+                                    <option>lbs</option>
+                                    <option>Pallets</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-8 flex justify-end">
+                        <button 
+                            onClick={() => setStep(2)}
+                            disabled={!formData.supplierId || !formData.productName}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Continue
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {step === 2 && (
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 animate-in fade-in slide-in-from-right-4">
+                    <h2 className="text-lg font-semibold mb-6">Traceability & Documents</h2>
+                    
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Traceability Lot Code (TLC) *</label>
+                        <div className="flex gap-2">
+                            <input 
+                                type="text" 
+                                className="flex-1 rounded-lg border-slate-300 focus:ring-emerald-500 focus:border-emerald-500 font-mono"
+                                value={formData.tlc}
+                                onChange={e => setFormData({...formData, tlc: e.target.value})}
+                            />
+                            <button className="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-200">
+                                Auto-Gen
+                            </button>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">Must match the TLC assigned by the packing facility.</p>
+                    </div>
+
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Upload Required Documents</label>
+                        <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:bg-slate-50 transition-colors relative">
+                            <input 
+                                type="file" 
+                                multiple
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                onChange={handleFileChange}
+                            />
+                            <Upload className="mx-auto h-10 w-10 text-slate-400 mb-3" />
+                            <p className="text-sm text-slate-600 font-medium">Click to upload or drag and drop</p>
+                            <p className="text-xs text-slate-400 mt-1">BOL, Commercial Invoice, Certificates</p>
+                        </div>
+                    </div>
+
+                    {formData.files.length > 0 && (
+                        <div className="mb-8 space-y-2">
+                            {formData.files.map((file, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                    <div className="flex items-center space-x-3">
+                                        <FileText className="text-slate-400" size={18} />
+                                        <span className="text-sm font-medium text-slate-700">{file.name}</span>
+                                        <span className="text-xs text-slate-400">({(file.size / 1024).toFixed(0)} KB)</span>
+                                    </div>
+                                    <button onClick={() => removeFile(idx)} className="text-slate-400 hover:text-red-500">
+                                        <X size={18} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="flex justify-between">
+                        <button 
+                            onClick={() => setStep(1)}
+                            className="text-slate-600 hover:text-slate-900 font-medium px-4"
+                        >
+                            Back
+                        </button>
+                        <button 
+                            onClick={handleSubmit}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium shadow-sm"
+                        >
+                            Submit Receipt
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {step === 3 && (
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center animate-in fade-in zoom-in">
+                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <CheckCircle2 className="text-emerald-600" size={32} />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Receiving Logged Successfully</h2>
+                    <p className="text-slate-600 mb-8">
+                        The shipment has been added to inventory. Traceability data is being linked from the supplier portal.
+                    </p>
+                    <div className="flex justify-center space-x-4">
+                        <button 
+                            onClick={() => setView('inventory')}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium"
+                        >
+                            View Inventory
+                        </button>
+                        <button 
+                            onClick={() => {
+                                setStep(1);
+                                setFormData({
+                                    supplierId: '',
+                                    productName: '',
+                                    quantity: '',
+                                    uom: 'Cases',
+                                    receivedDate: new Date().toISOString().split('T')[0],
+                                    tlc: `TLC-${Math.floor(Math.random() * 10000)}`,
+                                    files: []
+                                });
+                            }}
+                            className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-6 py-2 rounded-lg font-medium"
+                        >
+                            Log Another
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
